@@ -1,0 +1,237 @@
+setwd("Z:/project")
+library(xlsx)
+library(ggplot2)
+library(ggfortify)
+library(zoo)
+library(timeSeries)
+library(quantmod)
+library(graphics)
+library(car)
+stocksClosingPrice <- read.xlsx(choose.files(), sheetIndex = 5 )
+dim(stocksClosingPrice)
+class(stocksClosingPrice)
+head(stocksClosingPrice)
+stocksClosingPrice <-  na.omit(stocksClosingPrice)
+
+GE <- subset(stocksClosingPrice, select = c("date", "geClose"))
+head(GE)
+class(GE)
+
+BAC <- subset(stocksClosingPrice, select = c("date", "bacClose"))
+head(BAC)
+class(BAC)
+
+XOM <- subset(stocksClosingPrice, select = c("date", "xomClose"))
+head(XOM)
+class(XOM)
+
+SP500 <- subset(stocksClosingPrice, select = c("date", "sp500Close"))
+head(SP500)
+class(SP500)
+
+
+
+
+
+#QUESTION 1
+
+ge.zoo <- zoo(GE$geClose, order.by = GE$date, unique(T))
+class(ge.zoo)
+GE.ts <- ts(ge.zoo, frequency = 365)
+class(GE.ts)
+
+bac.zoo <- zoo(BAC$bacClose, order.by = BAC$date, unique(T))
+class(bac.zoo)
+BAC.ts <- ts(bac.zoo, frequency = 365)
+class(BAC.ts)
+
+xom.zoo <- zoo(XOM$xomClose, order.by = XOM$date, unique(T))
+class(xom.zoo)
+XOM.ts <- ts(xom.zoo, frequency = 365)
+class(XOM.ts)
+
+sp500.zoo <- zoo(SP500$sp500Close, order.by = SP500$date, unique(T))
+class(sp500.zoo)
+SP500.ts <- ts(sp500.zoo, frequency = 365)
+class(SP500.ts)
+
+sp500.d<- decompose(SP500.ts)
+ge.d<- decompose(GE.ts)
+xom.d<- decompose(XOM.ts)
+bac.d<- decompose(BAC.ts)
+
+#trend of GE after decompose
+par(mfrow=c(2,2))
+autoplot(ge.d$trend, colour = "dodgerblue3", main = "Trend of closing prices of GE stocks",
+         xlab= "1st Jan 2000 to 30st May 2017", ylab = "Closing Price")
+
+autoplot(xom.d$trend, colour = "dodgerblue3", main = "Trend of closing prices of XOM stocks",
+         xlab= "1st Jan 2000 to 30st May 2017", ylab = "Closing Price")
+
+autoplot(bac.d$trend, colour = "dodgerblue3", main = "Trend of closing prices of BAC stocks",
+         xlab= "1st Jan 2000 to 30st May 2017", ylab = "Closing Price")
+
+autoplot(sp500.d$trend, colour = "dodgerblue3", main = "Trend of closing prices of SP500 stocks",
+         xlab= "1st Jan 2000 to 30st May 2017", ylab = "Closing Price")
+
+ts.plot(ge.d$trend, bac.d$trend, xom.d$trend)
+
+#trends of all stocks
+plot(x= GE$date, y = GE$geClose, xaxt = "n", type = 'l', col= "darkgreen", lty = 1, 
+     lwd = "1", ylim = c(0,110), main = "Trend of closing prices of all the stocks", 
+     xlab= "1st Jan 2000 to 30st May 2017", ylab = "Closing Price")
+lines(x = BAC$date, y = BAC$bacClose, type = 'l', col= "blue", lwd = "1")
+lines(x= XOM$date, y = XOM$xomClose, type = 'l', col= "red", lwd = "1")
+axis(1,GE$date, format(GE$date,"%Y"))
+legend("topleft", legend= c("GE", "BAC", "XOM"), lty = c(1,1,1),  
+       col = c("darkgreen", "blue", "red" ), cex = 0.75)
+
+
+
+
+#QUESTION 2
+#monotonicity
+plot(set1$geClose)
+plot(set1$bacClose)
+plot(set1$sp500Close)
+plot(set1$xomClose)
+# all are non monotonic
+
+
+#normality test
+shapiro.test(GE$geClose)
+shapiro.test(BAC$bacClose)
+shapiro.test(XOM$xomClose)
+shapiro.test(SP500$sp500Close)
+
+qplot(GE$geClose)
+qplot(BAC$bacClose)
+qplot(XOM$xomClose)
+qplot(SP500$sp500Close)
+
+
+qqnorm(GE$geClose)
+qqline(GE$geClose)
+qqnorm(BAC$bacClose)
+qqline(BAC$bacClose)
+qqnorm(XOM$xomClose)
+qqline(XOM$xomClose)
+qqnorm(SP500$sp500Close)
+qqline(SP500$sp500Close)
+
+
+set1 <- subset.data.frame(stocksClosingPrice, select = c("geClose", "bacClose", "xomClose" ,"sp500Close"))
+tail(set1)
+cor(set1, method = "spearman")
+
+
+
+
+
+#Question 3
+#model 1 ... GE as dependent
+model1 <- lm(geClose~bacClose+xomClose+sp500Close, set1)
+summary(model1)
+plot(model1)
+
+#model 2 ... XOM as dependent
+model2 <- lm(xomClose~bacClose+geClose+sp500Close, set1)
+summary(model2)
+plot(model2)
+
+#model 1 ... BAC as dependent
+model3 <- lm(bacClose~geClose+xomClose+sp500Close, set1)
+summary(model3)
+plot(model3)
+
+
+
+
+
+
+
+#Question 4
+#checking multicollinearity in models
+vif(model1)
+vif(model2)
+vif(model3)
+
+
+
+
+
+
+
+#Question 5
+#residuals of all the models
+res1 <- model1$residuals
+res1
+plot(res1)
+
+res2 <- model2$residuals
+res2
+plot(res2)
+
+res3 <- model3$residuals
+res3
+plot(res3)
+
+#residual plots of model 1
+par(mfrow=c(2,2))
+
+plot(x=model1$fitted.values, y= res1, pch="*", xlab= "Fitted values of Model 1",
+     ylab= "Residuals of Model 1")
+plot(x=set1$bacClose, y= res1, pch = '*', xlab= "closing price of BAC",
+     ylab= "Residuals of Model 1")
+plot(x=set1$xomClose, y= res1, pch = '*', xlab= "closing price of XOM",
+     ylab= "Residuals of Model 1")
+plot(x=set1$sp500Close, y= res1, pch = '*', xlab= "closing price of S&P500 index",
+     ylab= "Residuals of Model 1")
+title(main = "Residual Diagnostics of Model 1", outer = T)
+
+
+#residual plots of model 2
+plot(x=model2$fitted.values, y= res2, pch="*", xlab= "Fitted values of Model 2",
+     ylab= "Residuals of Model 2")
+plot(x=set1$bacClose, y= res2, pch = '*', xlab= "closing price of BAC",
+     ylab= "Residuals of Model 2")
+plot(x=set1$geClose, y= res2, pch = '*', xlab= "closing price of GE",
+     ylab= "Residuals of Model 2")
+plot(x=set1$sp500Close, y= res2, pch = '*', xlab= "closing price of S&P500 index",
+     ylab= "Residuals of Model 2")
+title(main = "Residual Diagnostics of Model 2", outer = T)
+
+#resduals plots of model 3
+plot(x=model3$fitted.values, y= res3, pch="*", xlab= "Fitted values of Model 3",
+     ylab= "Residuals of Model 3")
+plot(x=set1$xomClose, y= res2, pch = '*', xlab= "closing price of XOM",
+     ylab= "Residuals of Model 3")
+plot(x=set1$geClose, y= res2, pch = '*', xlab= "closing price of GE",
+     ylab= "Residuals of Model 3")
+plot(x=set1$sp500Close, y= res2, pch = '*', xlab= "closing price of S&P500 index",
+     ylab= "Residuals of Model 3")
+title(main = "Residual Diagnostics of Model 3", outer = T)
+
+
+
+
+
+#Question 6
+testdata <- read.csv(choose.files())
+predictedval1 <- predict(model1, newdata=testdata)
+#predictedval1 <- 5.955983 + 0.191837*testdata$bacClose - 0.150804*testdata$xomClose + 0.015447*testdata$s.pClose
+percentageError1 <- (predictedval1 - testdata$Close)*100/testdata$Close
+head(percentageError1)
+mean(abs(percentageError1)) #58.46 % ACCURACY
+
+
+predictedval2 <- predict(model2, newdata=testdata)
+percentageError2 <- (predictedval2 - testdata$xomClose)*100/testdata$xomClose
+head(percentageError2)
+mean(abs(percentageError2))# 49.4% ACCURACY
+
+
+predictedval3 <- predict(model3, newdata=testdata)
+percentageError3 <- (predictedval3 - testdata$bacClose)*100/testdata$bacClose
+head(percentageError3)
+mean(abs(percentageError3))#17.6 % ACCURACY
