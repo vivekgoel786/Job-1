@@ -1,0 +1,134 @@
+setwd("C:/Users/vivek.goel/Desktop")
+adult1 <- read.table("Adult.csv")
+adult1
+class(adult1)
+
+dim(adult1)
+adult1[1,]
+adult1[1,15]
+table(adult1$V15)
+pie(table(adult1$V15))
+barplot(table(adult1$V15))
+class(adult1$V15)
+sum(adult1$V15 == ">50K")
+adult1[adult1$V15 == ">50K",] -> adultgt50k
+table(adultgt50k$V15)
+pie(table(adultgt50k$V15))
+adult1[adult1$V15 == "<=50K",] -> adultlt50k
+#or u can use
+#adult1[!(adult1$V15 == ">50K"),] -> adultlt50k
+table(adultlt50k$V15)
+
+install.packages(xlsx)
+library(xlsx)
+adult2 <- read.xlsx("book1.xlsx", sheetIndex = 1, header = F)
+help(xlsx)
+
+install.packages("RODBC")
+library(RODBC)
+con <- odbcConnect("DNA")
+class(con)
+sqlFetch (con,"OBJS")
+T<-sqlFetch (con,"OBJS")
+colnames(T)
+class(T$ID)
+class(T$Field1)
+sqlQuery(con,"select * from OBJS")
+sqlQuery(con,"select id from OBJS")
+sqlQuery(con,"select * from OBJS where id>2")
+
+
+install.packages("XML")
+library(XML)
+doc <-  xmlTreeParse ("book.xml")
+rootNodeReview <- xmlRoot(doc)
+xmlName(rootNodeReview)
+xmlSize(rootNodeReview)
+names(rootNodeReview)
+
+
+
+
+par(mfrow=c(1,2))
+boxplot(trees$Girth)
+boxplot(trees$Height)
+
+
+
+
+library(xlsx)
+res <- read.xlsx("C:\\Users\\vivek.goel\\Downloads\\EXDA_6\\EDA data (3)\\restaurant_details.xlsx", sheetIndex = 1)
+
+
+
+
+
+df1 <- data.frame(id=c(1001,1002,1003,1004,1006,1007), name = c("Ned", "Jon", "Arya", "Sansa", "Bran", "Robb"))
+df1
+df2 <- data.frame(eid=c(1001,1008,1005,1009,1000,1007), salary = c(400, 500, 600, 700, 800, 900))
+df2
+merge(df1,df2)
+merge(df1,df2, by.x = "id", by.y = "eid")
+merge(df1,df2, by.x = "id", by.y = "eid", all.y = T)
+
+
+mtcars
+summary(mtcars$gear)
+summary(mtcars$gear>3)
+mtcars$gear>3
+class(mtcars$gear)
+table(mtcars$gear)
+mean(mtcars$gear)
+mtcars[mtcars$gear>3,]
+mtcars[mtcars$gear==4 | mtcars$gear==5,]
+subset(mtcars, gear %in% c(4,5))
+subset(mtcars, gear ==4 | gear==5)
+mtcars[mtcars$gear ==4 | mtcars$gear==5, c(1,2,6)]
+help(subset)
+subset(mtcars, subset=c(gear %in% c(4,5)), select=c("mpg", "cyl", "wt"))
+
+mtcars$gear <- as.factor(mtcars$gear)
+class(mtcars$gear)
+mtcars$gear>3
+mtcars$gear %in% c(4,5)
+mtcars$wt
+order(mtcars$wt)
+dim(mtcars)
+mtcars$wt[order(mtcars$wt)]
+mtcars$wt[order(-mtcars$wt)]
+mtcars$wt[order(mtcars$wt,decreasing= T)]
+mtcars$wt[order(mtcars$wt,decreasing= F)]
+mtcars[order(mtcars$wt,decreasing= T), ]
+mtcars[order(mtcars$wt,decreasing= F), ]
+cars1 <- mtcars[1:10, c(1,10,11)]
+cars1
+library(reshape2)
+library(reshape)
+help(melt)
+
+exp1 <- data.frame(area=c("eng","ger","fra","amer","afr","aus"), 
+                   name = c("Ned", "Jon", "Arya", "Sansa", "Bran", "Robb"), y1800 =c(10,12,15,11,14,18),
+                   y1810= c(15,16,17,18,19,20))
+exp1
+exp_melt <- melt(exp1, id=c("name", "area"))
+cast(exp_melt, name~variable, mean)
+cast(exp_melt, area~variable, mean)
+cast(exp_melt, area~variable, sum)
+cast(exp_melt, area~value, sum)
+##############################
+
+
+
+
+
+
+
+summary(mtcars$wt)
+summary(mtcars$gear)
+quantile(mtcars$wt)
+quantile
+quantile(mtcars$wt, .8)
+quantile(mtcars$wt, .75)
+quantile(mtcars$wt, .8) - quantile(mtcars$wt, .75)
+IQR(mtcars$wt)
+quantile(mtcars$wt, .75) - quantile(mtcars$wt, .25)
