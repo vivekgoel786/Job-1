@@ -1,0 +1,130 @@
+setwd("D:/vivek")
+#ARIMA
+
+#Autoregressive Integrated Moving Average which is also know as 
+#Box-Jenkins models which may include autoregressive, moving 
+#average and differencing.
+
+#It is referred as AR if it uses only autoregressive model, 
+#MA if it uses Moving average. Differencing order refers to 
+#successive first difference.
+
+# It is used for forecasting trend and assumes that data are 
+#correlated with the past data values
+
+#p: Autoregressive Order
+#d: Integration Order
+#q: Moving Average Order
+
+# Autocorrelation (ACF) and Partial Autocorrelation Function (PACF) 
+#used to estimate the parameters of ARIMA(p,d,q)
+library(stats)
+library(ggplot2)
+library(timeSeries)
+library(ggfortify)
+library(fma)
+hsales
+#autocorrelation function for hsales
+autoplot(acf(hsales[1:252]), ts.colour = ('dodgerblue3'), 
+         main= "ACF of hsales data till dec 1994", 
+         xlab = 'Lag', ylab = 'ACF') + theme(text = element_text(size=10))
+
+#autocorrelation function for log of airpassengers
+autoplot(acf(log(AirPassengers[1:132])), ts.colour = ('dodgerblue3'), 
+         main= "ACF of log of airpassengers data till dec 1959", 
+         xlab = 'Lag', ylab = 'ACF') + theme(text = element_text(size=10))
+
+#autocorrelation function for differenced log of airpassengers
+autoplot(acf(diff(log(AirPassengers[1:132]))), ts.colour = ('dodgerblue3'), 
+         main= "ACF of differenced log of airpassengers data till dec 1959", 
+         xlab = 'Lag', ylab = 'ACF') + theme(text = element_text(size=10))
+
+
+# Partial autocorrelation function for hsales
+autoplot(pacf(hsales[1:252]), ts.colour = ('dodgerblue3'), 
+         main= "PACF of hsales data till dec 1994", 
+         xlab = 'Lag', ylab = 'PACF') + theme(text = element_text(size=10))
+
+#Partial autocorrelation function for differenced log of airpassenger
+autoplot(pacf(diff(log(AirPassengers[1:132]))), ts.colour = ('dodgerblue3'),
+         main= "PACF of differenced log of airpassengers data till dec 1959",
+         xlab = 'Lag', ylab = 'PACF') + theme(text = element_text(size=10))
+
+
+
+
+
+
+#Estimating the Parameters of ARIMA
+#seasonal difference of airpassengers data
+library(ggplot2)
+library(timeSeries)
+library(ggfortify)
+library(datasets)
+seasonal_diff <- diff(ts(log(AirPassengers), frequency = 12), 12)
+autoplot(seasonal_diff, ts.colour = ('dodgerblue3'), main= "Airpassengers data",
+         xlab = "jan 1949 to dec 1960", ylab = 'number of air passengers') + 
+        theme(text = element_text(size=10))
+#the seasonal difference still exhibits some trend(curved). Hence we might 
+#need to difference this series again.
+seasonal_diff1 <-   diff(seasonal_diff, 1)
+autoplot(seasonal_diff1, ts.colour = ('dodgerblue3'), main= "Airpassengers data",
+         xlab = "jan 1949 to dec 1960", ylab = 'number of air passengers') + 
+  theme(text = element_text(size=10))
+#the series does not exhibit any proper trend. Hence we may conclude that 
+#the value of d and D should be 1.
+
+
+#ACF of Differenced series
+autoplot(acf(seasonal_diff1, 48), ts.colour = ('dodgerblue3'), 
+         main= "ACF of seasonal difference of log of airpassengers", 
+         xlab = 'Lag', ylab = 'ACF') + theme(text = element_text(size=10))
+#PACF of Differenced series
+autoplot(pacf(seasonal_diff1, 48), ts.colour = ('dodgerblue3'), 
+         main= "PACF of seasonal difference of log of airpassengers", 
+         xlab = 'Lag', ylab = 'PACF') + theme(text = element_text(size=10))
+
+
+#Values of ARIMA can also be determined by using the auto.arima()
+#in R present in the forecast package.
+#estimating the values of p,d and by using auto.arima model
+library(forecast)
+auto.arima(log(AirPassengers[1:132]))
+
+#Predicting the number of passengers
+fit <- arima(log(AirPassengers[1:132]), order= c(1,1,1), 
+             seasonal = list(order= c(0,1,1), period =12))
+predictedvalues <- predict(fit, n.ahead = 12)
+#the predicted value for the year 1960
+model1_prediction <- exp(predictedvalues$pred)
+model1_prediction
+
+#computing the MSE
+#MSE for the prediction is 307.58
+library(Metrics)
+mse(AirPassengers[133:144], model1_prediction)
+#By using ARIMA(1,1,1)(0,1,1)12 we can predict that 419 people 
+#might take the international flight in January 1960.
+
+
+# Significance of Coefficients
+#We can improve the model based on the confidence interval by looking 
+#at the significant levels of co-efficient. Confidence interval of 
+#the ARIMA model is computed by using confint() function.
+confint(fit)
+#it is not necessary that all of the 3 coefficients remain significant
+# if any of the coefficient values changes its sign from positive to 
+#negative or vice-versa, it implies that the value crosses the zero mark.
+#Then the coefficients are considered to be insignificant.
+
+
+
+fit2 <- arima(log(AirPassengers[1:132]), order= c(1,1,1), fixed = c(0,0,NA),
+             seasonal = list(order= c(0,1,1), period =12))
+predictedvalues2 <- predict(fit2, n.ahead = 12)
+model2_prediction <- exp(predictedvalues2$pred)
+model2_prediction
+#computing the MSE for model 2
+#MSE for the prediction is 400.509
+mse(AirPassengers[133:144], model2_prediction)
+# MSE and AIC of Model 1 less than Model 2
