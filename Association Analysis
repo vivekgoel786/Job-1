@@ -1,0 +1,216 @@
+library(MASS)
+Cars93
+colnames(Cars93)
+Cars93reduced <- subset.data.frame(Cars93, select = c("Type", "MPG.city", "AirBags",  "DriveTrain", "Cylinders", "EngineSize",
+                                                      "Horsepower", "RPM", "Rev.per.mile",  "Fuel.tank.capacity", "Length",
+                                                      "Wheelbase", "Width",  "Turn.circle", "Weight"))
+Cars93numeric <- subset.data.frame(Cars93reduced, select= c("MPG.city" , "EngineSize", "Horsepower", "RPM", "Rev.per.mile",  
+                                                            "Fuel.tank.capacity", "Length", "Wheelbase", 
+                                                            "Width",  "Turn.circle", "Weight" ))
+pairs(Cars93numeric, upper.panel = NULL)
+plot(Cars93numeric$MPG.city, Cars93numeric$Horsepower, Cars93numeric$RPM, Cars93numeric$Wheelbase, xlim=(0, 10000))
+
+#covariance by formula
+mean(Cars93$MPG.city)
+mean(Cars93$EngineSize)
+sum((Cars93$MPG.city- mean(Cars93$MPG.city))*((Cars93$EngineSize)- mean(Cars93$EngineSize))/ (nrow(Cars93)-1))
+#using the cov() function
+cov1 <- cov(Cars93$MPG.city, Cars93$EngineSize)
+cov2 <- cov(Cars93$MPG.city, Cars93$Horsepower)
+
+#calculating Z score for mpgcity
+z_score_mpgcity <- ((Cars93$MPG.city - mean(Cars93$MPG.city))/ sd(Cars93$MPG.city))
+z_score_mpgcity
+summary(z_score_mpgcity)
+
+z_score_engsize <- ((Cars93$EngineSize - mean(Cars93$EngineSize))/ sd(Cars93$EngineSize))
+z_score_engsize
+summary(z_score_engsize)
+
+z_score_horsepow <- ((Cars93$Horsepower - mean(Cars93$Horsepower))/ sd(Cars93$Horsepower))
+z_score_horsepow
+summary(z_score_horsepow)
+
+cov3 <- cov(z_score_mpgcity, z_score_horsepow)
+
+print(c(cov2, cov3))
+
+#several covariance at a time
+#covarinace matrix
+set1 <- subset.data.frame(Cars93, select = c("MPG.city", "EngineSize", "Horsepower" ,"RPM"))
+cov4 <- cov(set1)
+cov4
+
+#check normality before computing correlation
+#shapiro wilk test
+shapiro.test(Cars93$Turn.circle)
+shapiro.test(Cars93$Length)
+shapiro.test(Cars93$Wheelbase)
+shapiro.test(Cars93$MPG.city)
+shapiro.test(Cars93$Horsepower)
+shapiro.test(Cars93$EngineSize)
+shapiro.test(Cars93$RPM)
+
+#qplot
+library(ggplot2)
+qplot(Cars93$Turn.circle)
+
+
+# qqplot for normality
+qqnorm(Cars93$Turn.circle)
+qqline(Cars93$Turn.circle)
+
+qqnorm(Cars93$Length)
+qqline(Cars93$Length)
+
+qqnorm(Cars93$Wheelbase)
+qqline(Cars93$Wheelbase)
+
+#cov and corr
+cov(Cars93$Length, Cars93$Turn.circle)
+cor(Cars93$Length, Cars93$Turn.circle)
+
+cov(Cars93$Wheelbase, Cars93$Turn.circle)
+cor(Cars93$Wheelbase, Cars93$Turn.circle)
+
+
+#SPEARMAN CORRELATION
+First10HP <- head(Cars93$Horsepower, 10)
+First10HP <- sort(First10HP, decreasing = T)
+First10HP
+#assigning ranks
+rankFirst10HP <- rank(First10HP)
+rankFirst10HP
+
+cor(Cars93$Horsepower, Cars93$MPG.city, method = "spearman")
+cor(Cars93$RPM, Cars93$MPG.city, method = "spearman")
+cor(Cars93$EngineSize, Cars93$MPG.city, method = "spearman")
+
+
+#compare spearman and pearson
+cor(Cars93$RPM, Cars93$MPG.city, method = "spearman")
+cor(Cars93$RPM, Cars93$MPG.city)
+
+#testing which is better
+cor.test(Cars93$RPM, Cars93$MPG.city)
+cor.test(Cars93$RPM, Cars93$MPG.city,method = "spearman") #which ever has lower pvalue is better
+
+
+
+
+#KENDALL CORRELATION
+First25RPM <- (rank(head(Cars93$RPM, 25)))
+First25Mgpc <-(rank(head(Cars93$MPG.city, 25)))
+combo <- matrix(c(First25RPM, First25Mgpc), nrow = 25, ncol = 2)
+combo[19:21,]
+head(combo)
+
+rpmvalues <- c(12.5, 18.0, 12.5)
+mpgcvalues <- c(5.5, 14.0, 20.5)
+cor(rpmvalues, mpgcvalues, method = "kendall")
+
+# -1 <= 3 kendall tau - 2 spearman rho  <= 1 
+# tau = ((no. of concordant pairs) - (no. of discordant pairs))/ (n(n-1)/2) . for kendall
+
+
+cor(Cars93$Horsepower, Cars93$MPG.city, method = "kendall")
+cor(Cars93$RPM, Cars93$MPG.city, method = "kendall")
+cor(Cars93$EngineSize, Cars93$MPG.city, method = "kendall")
+
+
+#several correlation at a time
+#correlation matrix
+cor(set1)
+
+
+
+
+
+
+
+
+
+
+
+
+#Association between categorical variables
+#Since these variables are qualitative (categorical), 
+#covariance and correlation may be inappropriate metrics 
+#to determine the existence of an association between them
+
+#Two way table between drivetrain and type
+table(Cars93$DriveTrain, Cars93$Type)
+addmargins(table(Cars93$DriveTrain, Cars93$Type))
+#The existence of an association can be determined by performing a Chi-squared test on the two way table
+
+#Chi-squared test
+#H0 (Null hypothesis): The variables are independent & H1 (Alternate hypothesis): The variables are dependent.
+#degrees of freedom= (no. of rows - 1) × (no. of columns - 1)
+#dof=10, los=0.05
+chi_critical <- qchisq(p = 1-0.05, df = 10)
+matcat <- as.matrix(table(Cars93$DriveTrain, Cars93$Type))
+chisq.test(matcat) #we reject when pvalue < alfa ....and calculated chi > critical chi
+
+#now for cylinders and type of cars
+table(Cars93$Cylinders, Cars93$Type)
+addmargins(table(Cars93$Cylinders, Cars93$Type))
+chi_critical2 <- qchisq(p = 1-0.05, df = 25)
+chi_critical2
+matcat2 <- as.matrix(table(Cars93$Cylinders, Cars93$Type))
+chisq.test(matcat2) #calculated > critical and p VALUE< alpha , so reject null, variables are dependent
+
+
+
+
+
+
+
+
+
+
+
+#Association between two binary variables
+origin_trans <- subset.data.frame(Cars93, select = c("Man.trans.avail", "Origin"))
+head(origin_trans,10)
+#use Phi coefficient
+table(origin_trans)
+addmargins(table(origin_trans))
+#Phi coefficient is also the Pearson correlation coefficient for two binary variables. use cor()
+#The value of Phi also lies in the range [-1,+1] and a value closer to 1 indicates a stronger association.
+manfn <- function(x) if (x=="Yes") 1 else 0 
+orifn <- function(x) if (x=="USA") 1 else 0 
+mantrans <- sapply(X=Cars93$Man.trans.avail, FUN = manfn)
+origin <- sapply(X= Cars93$Origin, FUN = orifn)
+phi <- cor(mantrans,origin) 
+phi
+
+#Phi coefficient is also related to the Chi-squared statistic
+phisq = phi^2
+chi <- chisq.test(as.matrix(table(origin_trans)))
+chi
+cal_chisq <- chi$statistic
+cal_chisq
+exp_phisq <- cal_chisq/nrow(origin_trans)
+phisq #0.1845031
+exp_phisq #X-squared =  0.1655615
+
+
+
+
+
+
+
+
+#Market Basket Analysis
+require(arules) #library(arules)
+trans <- read.csv(choose.files())
+mat <- as.matrix(trans)
+mat
+barplot(mat)
+
+
+
+data("Groceries")
+rules <- apriori(Groceries, parameter = list(support = .01, confidence = 0.5))
+#display the number of rules
+rules
