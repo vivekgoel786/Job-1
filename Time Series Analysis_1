@@ -1,0 +1,373 @@
+setwd("Z:\\Time series analysis")
+install.packages("datasets")
+library(datasets)
+
+summary(AirPassengers[1:132])
+#the no. of passengers taking the international flight
+library(ggplot2)
+install.packages("ggfortify")
+library(ggfortify)
+
+install.packages("timeSeries")
+library(timeSeries)
+autoplot(as.timeSeries(AirPassengers),
+         ts.colour = ('dodgerblue3'),
+         main='AirPassengers data', xlab ='Jan 1949 to Dec 1960' ,
+         ylab = 'no. of air passengers') +theme(text= element_text(size=20))
+
+#Comparing AirPassengers and Cars93 datasets
+library(MASS)
+#cars93 has 27 pareameters but for simplicity we have considered only first two parameters
+ggplot(Cars93, aes(x= as.integer(row.names(Cars93)))) +
+  geom_line(aes(y = Cars93$Min.Price), colour= 'blue') +
+  geom_line(aes(y = Cars93$Max.Price), colour= 'green') + 
+  ylab(label= 'min and max price') + 
+  xlab(label = "index of cars93 data") +
+  labs(title="min and max price of cars93 data") + 
+  theme(text= element_text(size = 20))
+
+#As the two datasets are of different types, the prediction techniques used for 
+#Cars93 cannot be used for AirPassengers and vice versa.
+
+#Convert Data to Time Series
+#airpassengers is the series # and frequency is set to 12 for yearly data
+class(AirPassengers)
+airpass <- ts(AirPassengers , frequency = 12)
+#frequency - number of observations to be considered at a time.
+#(For monthly it is set to 1, for quarterly it is set to 4 and for yearly it is set to 12)
+
+
+#Converting sorted data into time series data:
+#generating date and random vector
+library(zoo)
+observed_dates <- seq(as.Date("1910/1/1"), as.Date("1910/1/10"), "day")
+class(observed_dates)
+closingprice <- as.vector(floor(runif(10,1,500)))
+class(closingprice)
+#zoo helps to create an index by sorting the observations.
+#creating a zoo class
+zoo_object <- zoo(closingprice,order.by = as.Date(observed_dates), unique(T))
+class(zoo_object)
+zoo_object
+# then use the ts() function to create a time series data using zoo as the input class
+#convert zoo to time series
+timeseries_data <- ts(zoo_object)
+class(timeseries_data)
+timeseries_data
+
+
+#generate unsorted dates
+#for unordered series
+observed_dates <- seq(as.Date("1910/1/1"), as.Date("1910/1/10"), "day")
+observed_dates
+reshuffeled_dates <- as.data.frame(sample(observed_dates)) 
+class(reshuffeled_dates)
+reshuffeled_dates
+#generateing a random uniformly distributed numeric value for the stock closing price
+#binding unsorted dates with their corresponding values
+closingprice <- as.vector(floor(runif(10, 1,10)))
+class(closingprice)
+stockdata <- cbind(reshuffeled_dates, closingprice)
+class(stockdata)
+stockdata
+#creating index with zoo function
+zoo_object <- zoo(stockdata[,2], order.by = as.Date(stockdata[,1]), unique(T))
+class(zoo_object)
+# use the ts() function to create a time series data using zoo as the input class. 
+timeseries_data <- ts(zoo_object)
+class(timeseries_data)
+timeseries_data
+
+
+#Scenario: Google stock data
+library(quantmod)
+getSymbols("GOOG", src= "google")
+class(GOOG)
+google_close <- zoo(GOOG$GOOG.Close, order.by = as.Date(as.character(index(GOOG))), unique(T))
+
+google_close
+class(google_close)
+  
+timeSeries <- ts(google_close)
+
+
+#Exercise 1 : Time Series Analysis
+
+
+
+
+
+#Patterns in Time Series Data
+    #Trend: show a long term increase or decrease in data
+    #Seasonal: when the data is affected by seasonal factors
+    #Cyclic: data shows fluctuations across any period of time
+    #Random: If the above 3 components are missing in a data
+
+#TRENDS
+passengers <- decompose(AirPassengers)
+autoplot(passengers)
+autoplot(passengers$trend, ts.colour = ("dodgerblue3"),
+         main="trend", xlab="Jan 1949 to Dec 1960" , ylab= "no. of passengers") +
+        theme(text = element_text(size=20))
+#the customer base for Cyrus Aviation was steadily increasing.
+
+
+#Google stock dataset closing price trend
+library(quantmod)
+#downld the google stock data from google finance
+getSymbols("GOOG", src= "google")
+#google closing price
+closingprice <- GOOG$GOOG.Close
+#decomposing the google stock data
+close_decom <- decompose(ts(closingprice, frequency = 261))$trend
+autoplot(close_decom, ts.colour = ('dodgerblue3'), main = "Google stock closing price - Trend",
+         xlab= "january 3,2007 to aug 18, 2016", 
+         ylab= "closing price") + theme(text = element_text(size=20))
+
+
+#Yahoo Stock dataset :  combination of downward & upward trend
+#downld the yahoo stock data from google finance
+library(quantmod)
+getSymbols("YHOO", src= "google")
+#yahoo closing price
+closingprice <- YHOO$YHOO.Close
+#decomposing the yahoo stock data
+close_decom <- decompose(ts(closingprice, frequency = 261))$trend
+autoplot(close_decom, ts.colour = ('dodgerblue3'), main = "Yahoo stock closing price - Trend",
+         xlab= "january 3,2007 to aug 18, 2016", 
+         ylab= "closing price") + theme(text = element_text(size=20))
+
+
+
+
+
+
+
+
+
+
+#FORECASTING
+#Step 1: Calculate the average number of passengers travelling in each year.
+#Seasonal Indexing for each month
+air_pass <- matrix(AirPassengers, ncol = 12, byrow = T)
+air_pass
+air_pass <- air_pass[1:11,]
+air_pass
+class(air_pass)
+air_avg <- apply(air_pass,1 , mean) #year wise mean is calculated across all months
+air_avg
+
+#Step 2: Divide the monthly data by the average of the corresponding year.
+#Divide the monthly data by the average of the corresponding year
+proportion <- air_pass/air_avg 
+proportion
+
+#Step 3: Compute the average across each year for the values of each month from step 2 in order to obtain the Seasonal Index
+#seasonal index for each month across all years
+seasonalIndex <- c()
+for(temp in c(1:12)){
+  seasonalIndex[temp] <- mean(proportion[,temp])
+}
+seasonalIndex #we can do like like below also
+#y <- apply(proportion, 2 , mean)
+#seasonalIndex2 <- cbind(y)
+#seasonalIndex2
+class(seasonalIndex)
+
+#Step 4: Deseasonalised data
+deseasonalised_air <-  matrix(AirPassengers[1:132]/seasonalIndex, nrow = 11, ncol = 12, byrow = T)
+deseasonalised_air
+print(deseasonalised_air[5,6])
+
+#Step 5: Use linear regression to forecast the trend values for each month of 1960. (intercept=93.839; slope= 2.533)
+#calculation for trend values by using linear regression
+AirPass <- cbind(as.vector(t(deseasonalised_air)), c(1:132))
+AirPass
+reg_air <- lm(AirPass[,1]~AirPass[,2])
+reg_air
+#trend values for year 1960
+trend_values <- c()
+temp1 <- 1
+for (temp in 133:144){
+  trend_values[temp1] <- reg_air$coefficients[1] + reg_air$coefficients[2]*temp
+  temp1 <- temp1+1
+}
+trend_values
+trend_values <- cbind(trend_values)
+rownames(trend_values) <- c("Jan", "Feb", "Mar", "Arp", "May", "June", "July", "Aug", "Sep", "Oct", "Nov", "Dec")
+
+#Step 6: Calculate the monthly occupancy for the year 1960 by multiplying the seasonality index with the trend value.
+#forecast for 1960 using seasonal index
+    #pred_val <- c()
+    #for (temp in c(1:12)){ pred_val[temp] <- seasonalIndex[temp] * trend_values[temp]}
+    #round(pred_val)
+pred_val <- trend_values*seasonalIndex
+pred_val <- round(pred_val)
+colnames(pred_val) <- "Monthly Occupancy"
+#find the error
+actual_values <- (AirPassengers[133:144])
+actual_values <- cbind(actual_values)
+Error <- round(pred_val) - cbind(actual_values)
+colnames(Error) <-  "Error"
+seasonalIndex <- cbind(seasonalIndex)
+table_1960 <- cbind(seasonalIndex, trend_values, pred_val, Error)
+table_1960
+
+
+#Now, let's assume that the AirPassengers data is quarterly instead of monthly(frequency=4)
+#Step 1: Calculate the average number of passengers travelling in each year (Table 12) & 
+#Divide the monthly data by the average of the corresponding year. 
+AirPassengers
+air_pass <- matrix(AirPassengers, ncol = 4, byrow = T)
+air_pass
+air_pass <- air_pass[1:33,]
+
+air_avg <- apply(air_pass, 1, mean)
+air_avg
+
+proportion <- air_pass/air_avg
+proportion
+
+
+#Step 2: Take the average of the values of each quarter from step 2 in order to obtain the Seasonal Index
+y <- apply(proportion, 2 , mean)
+y
+seasonalIndex2 <- cbind(y)
+seasonalIndex2
+seasonalIndex2 <- as.numeric(seasonalIndex2)
+class(seasonalIndex2)
+
+
+#Step 3: Divide the AirPassenger data by the Seasonal Index to obtain the data that does not have a 
+#seasonal factor, this is known as deseasonalized data.
+deseasonalised_air <-  matrix(AirPassengers[1:132]/seasonalIndex2, nrow = 33, ncol = 4, byrow = T)
+deseasonalised_air
+
+#Step 4: Use linear regression to forecast the trend values for last 12 quarters. (intercept = 92.346; slope = 2.558)
+#calculation of trend values 
+AirPass <- cbind(as.vector(t(deseasonalised_air)), c(1:132))
+reg_air <- lm(AirPass[,1]~AirPass[,2])
+reg_air
+#trend values for next 3 quaters of year 1960
+trend_values <- c()
+temp1 <- 1
+for (temp in 133:144){
+  trend_values[temp1] <- reg_air$coefficients[1] + reg_air$coefficients[2]*temp
+  temp1 <- temp1+1
+}
+trend_values
+trend_values <- cbind(trend_values)
+rownames(trend_values) <- c("Jan", "Feb", "Mar", "Arp", "May", "June", "July", "Aug", "Sep", "Oct", "Nov", "Dec")
+trend_values
+
+
+#Step 5: Calculate the quarterly occupancy for the year 12 quarters by multiplying the 
+#seasonality index with the trend value.
+pred_val <- trend_values*seasonalIndex2
+pred_val <- round(pred_val)
+colnames(pred_val) <- "Quaterly Occupancy"
+
+#find the error
+actual_values <- (AirPassengers[133:144])
+actual_values <- cbind(actual_values)
+Error <- round(pred_val) - cbind(actual_values)
+colnames(Error) <-  "Error"
+seasonalIndex2 <- cbind(rep(seasonalIndex2,3))
+table_1960 <- cbind(seasonalIndex2, trend_values, pred_val, Error)
+table_1960
+
+
+#The autoregressive and moving average models are used as standalone models 
+#as well as in a combination depending on the type of data we are working with.
+#In order to use autoregressive, moving average or autoregressive moving average 
+#models, we need to ensure that the series is stationary.
+AirPassengers
+#Lag and Difference
+AirPassengers[1:12]
+diff(AirPassengers[1:12], lag=1)
+diff(AirPassengers[1:12], lag=2)
+diff(AirPassengers[1:12], difference=1)
+diff(AirPassengers[1:12], difference=2)
+
+
+
+#Stationary Time Series
+#the plot shows the no. of passengers taking the flights
+library(ggfortify)
+library(ggplot2)
+library(timeSeries)
+autoplot(as.timeSeries(AirPassengers), ts.colour=('dodgerblue3'), 
+     main = "airpassengers data", xlab = "jan 1949 to dec 1960", 
+     ylab = "number of airpassengers") + theme(text=element_text(size = 20))
+
+#the plot shows the differenced series passengers 
+autoplot(as.timeSeries(diff(AirPassengers)), ts.colour=('dodgerblue3'), 
+         main = "I(1) of airpassengers data", xlab = "jan 1949 to dec 1960", 
+         ylab = "number of airpassengers") + theme(text=element_text(size = 20))
+
+#both at one plot
+ts.plot(AirPassengers, diff(AirPassengers))
+#we did the differece or lag ...to make the mean constant... but variance is still unequal
+
+#log transformation
+#log transformation in order to have an equal variance for the AirPassengers data
+
+#plotting airpassengers  with almost equal variance by using log
+autoplot(as.timeSeries(log(AirPassengers)), ts.colour=('dodgerblue3'), 
+         main = "log of airpassengers data", xlab = "jan 1949 to dec 1960", 
+         ylab = "number of airpassengers") + theme(text=element_text(size = 20))
+
+#the differenced passengers with almost equal variance by using log
+autoplot(as.timeSeries(diff(log(AirPassengers))), ts.colour=('dodgerblue3'), 
+         main = "I(1) of log of airpassengers data", xlab = "jan 1949 to dec 1960", 
+         ylab = "number of airpassengers") + theme(text=element_text(size = 20))
+#both at one plot
+ts.plot(log(AirPassengers), diff(log(AirPassengers)))
+#The plot of the series helps us to draw some conclusion whether a particular series 
+#is stationary or not. We may also use Dickey-Fuller test to check the stationarity of a series.
+
+
+#Dickey-Fuller Test for Stationarity
+#In Dickey Fuller test uses hypothesis testing to check whether a particular series is stationary or not
+library(fma)
+library(tseries)
+#plotting hsales data from fma package 
+#cylic
+autoplot(ts(hsales), ts.colour=('green'), 
+         main = "house sale data", xlab = "jan 1973 to nov 1995", 
+         ylab = "monthly housing sales") + theme(text=element_text(size = 20))
+
+adf.test(hsales, alternative= "stationary")
+#the p-value will be less than 0.05, so we reject the null hypothesis, the series is stationary
+
+
+#To check whether the series differenced series of log(AirPassengers) is stationary or not
+autoplot(as.timeSeries(diff(log(AirPassengers))), ts.colour=('dodgerblue3'), 
+         main = "I(1) of log of airpassengers data", xlab = "jan 1949 to dec 1960", 
+         ylab = "number of airpassengers") + theme(text=element_text(size = 20))
+
+#Dickey-Fuller Test for Stationarity on differenced series of log of airpassengers
+adf.test(diff(log(AirPassengers[1:132])), alternative= "stationary")
+#The series might be stationary since the p-values (0.01) is less than 0.05. 
+
+
+
+
+# Autoregressive Model
+#Autoregressive model works only on stationary data, we cannot make any prediction using AirPassengers data.
+library(stats)
+library(fma)
+hsales
+#prediction using autoregressive model for the year 1994
+hsales_model <- ar(hsales[1:252], order = 1 )
+predict(hsales_model, n.ahead = 12)
+#Thus we can observe that the monthly sales of houses for December 1994 will be 51.77932 with the maximum standard error 11.991996.
+
+
+
+
+#Moving Average Model
+#The moving average model uses the past errors that result from the regression model to predict the future values. 
+#The future values are calculated by multiplying the past errors with their corresponding coefficients.
+
+#ARIMA
