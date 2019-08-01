@@ -1,0 +1,54 @@
+install.packages("MASS")
+library ("MASS")
+mtcars
+class(mtcars)
+
+#Q1.
+#a)	Extract the column names of the given dataset in two different ways. 
+names(mtcars)
+colnames(mtcars)
+#b)	Extract the first 2 rows of the dataset in two different ways.
+mtcars[1:2,]
+head(mtcars, 2)
+#c)	Extract 12th to 18th rows of the data frame and print them to the console.
+y <- mtcars[12:18,]
+print(y)
+#d)	Display horse power ('hp') of Honda Civic car.
+print(mtcars["Honda Civic", "hp"])
+#e)	Display all the rows, where displacement ('disp') is equal to 275.8.
+subset(mtcars, disp==275.8)
+#f)	Determine the Mean and the 1st quantile of the displacement. 
+mean(mtcars$disp)
+quantile(mtcars$disp)
+#g)	Display the horse power and the names of the cars which have 8 cylinders ('cyl').
+subset(mtcars, cyl==8, select =c(cyl,hp))
+#h)	Display the name of the car which has the maximum mileage ('mpg')
+max(mtcars$mpg)
+subset(mtcars, mpg==33.9)
+#i)	Find the position of the car with the minimum weight ('wt').
+which(mtcars$wt==min(mtcars$wt))
+
+
+
+#Q2.
+#a)
+paint <- painters
+class(paint)
+factor(paint$School)
+
+#c)
+aggregate(paint[,2], list(paint$School), mean)
+#d)
+aggregate(paint[,1:2], list(paint$School), mean)
+#e)
+apply(paint,2,min)
+apply(paint,2,max)
+#f)
+paint[2,3] = 8
+
+
+
+
+
+
+
