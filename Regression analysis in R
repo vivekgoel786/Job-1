@@ -1,0 +1,353 @@
+setwd("Z:\\regression analysis")
+library(Flury)
+data("computers")
+
+#rough prediction
+mean(computers$Minutes)
+median(computers$Minutes)
+
+#difference from mean
+plot(computers$Minutes)
+abline(mean(computers$Minutes), 0, col="red")
+
+#correlation
+cor(computers$Minutes, computers$Units)
+
+#Visualizing the Speculated Regression Models
+#plot of model 0, 1, 2
+plot(computers$Units, computers$Minutes, main="Speculated Models", xlab= "no. of units replaced",
+     ylab= "time taken to repair computer")
+?abline
+abline(mean(computers$Minutes), 0, col= "red", lwd=2)
+abline(10,12, col="blue", lwd=2)
+abline(6, 18, col="green", lwd=2)
+legend('bottomright', c("model 0", "model 1", "model 2"), lty=1, lwd=2, col=c("red", "blue", "green"), bty = "n", cex=0.75)
+
+
+#Best Fit Model
+#for b0 and b1
+x <- computers$Units
+y <- computers$Minutes
+xiyi  <- x*y
+n <- nrow(computers)
+xmean <- mean(x)
+ymean <- mean(y)
+print(c(xmean,ymean))
+numerator <- sum(xiyi)- n*xmean*ymean
+denominator <- sum(x^2)- n*(xmean^2)
+b1 <- numerator/denominator
+b0 <- ymean - b1*xmean
+print(c(b0,b1))
+#eatimated time taken to repair a computer = 4.161654 + (15.508772 * units being replaced)
+plot(computers$Units, computers$Minutes, main= "Best Fit Model")
+abline(b0, b1)
+
+#errors of best fit model
+
+#Best Fit Model Using lm() Command
+lm.model <- lm(computers$Minutes~computers$Units)
+#Syntax for the lm() command - lm(dependent variable ~ predictor variables)
+lm.model
+res_lm.model <- resid(lm.model)
+res_lm.model
+sum(res_lm.model)
+#computing fitted values
+fit_lm.model <- lm.model$fitted.values
+#regress residuals on fitted values
+lm.model2 <- lm(res_lm.model~fit_lm.model)
+lm.model2
+plot(fit_lm.model, res_lm.model)
+abline(6.401e-16, -5.364e-18)
+plot(lm.model)
+
+
+#Validating the Linearity Assumption Using Residuals vs. Fitted Plot
+a <- c(1:100)
+b <- a^2
+lm_model_quad <- lm(b~a)
+res_lm_model_quad <- resid(lm_model_quad)
+fit_lm_model_quad <- lm_model_quad$fitted.values
+lm_model3 <- lm(res_lm_model_quad ~fit_lm_model_quad)
+plot(fit_lm_model_quad,res_lm_model_quad)
+plot(lm_model_quad)
+
+#28
+#Validating the Assumption That Errors are Normally Distributed
+shapiro.test(res_lm.model )
+#For a significance level of 0.05 the the p-value obtained from the Shapiro-Wilk test suggests that the model 
+#abides to the assumption of normality since the p-value is greater than the chosen significance level.
+
+
+
+
+
+
+
+#Computing the Coefficient of Determination
+TSS <- sum((mean(computers$Minutes)- computers$Minutes)^2)
+TSS
+#Rss for best fit model
+RSS <- sum((res_lm.model)^2)
+RSS
+ESS <- TSS-RSS
+ESS
+
+Rsq <- ESS/TSS
+Rsq
+#R2 value of 0.9874372 indicates that 98.74 % of the variability observed in the dependent variable 
+#(time taken to repair computer) can be explained by variability in the predictor variable (units being replaced)
+#R2 can take values in the range 0 and 1. The higher the value of R2, the more useful is the model
+
+
+#The summary() Command
+summary(lm.model)
+#In order to validate the null hypothesis, t-test is used.
+#The null hypothesis is rejected if the p-value is less than or equal to the significance value.
+
+
+
+#Multiple Linear Regression for Delivery Time Dataset
+library(FRB)
+head(delivery)
+plot(delivery)
+delivery.lm <- lm(delivery$delTime~ delivery$n.prod + delivery$distance)
+delivery.lm
+plot(delivery.lm)
+
+
+
+
+
+#expected deltime = 2.34123 + 1.61591(n.prod) + 0.01438(distance) + EBLISON
+
+#Visualizing Multiple Linear Regression Model
+library("scatterplot3d")
+s3d <- scatterplot3d (delivery, type="h", color='blue', angle= 55, scale.y = 0.5, pch = 16, main = "multiple reg model")
+s3d$plane3d(delivery.lm, lty = "solid", col= "red")
+
+
+#EX 1
+library(rgl)
+plot3d(delivery, col = "blue", pch="*")
+
+
+#Validating the Assumption of Linearity
+res.delivery.lm <- delivery.lm$residuals
+res.delivery.lm
+fit.delivery.lm <- delivery.lm$fitted.values
+fit.delivery.lm
+plot( fit.delivery.lm,res.delivery.lm)
+
+#Validating the Assumption of Normality
+library(ggplot2)
+hist(res.delivery.lm)
+plot(delivery.lm) # 4 graphs
+
+#Validating the Assumption of Independence for Delivery Time Dataset
+#MULTICOLINEARITY
+cor(delivery$n.prod , delivery$distance )
+#VIF to check the independence of predicors
+library(car)
+vif(delivery.lm)
+#VIF value 3.118474 for the independent variables n.prod and distance is less than 10 
+#suggesting that the best fit model abides by the assumption of independence
+
+
+#Coefficient of Determination in one command for MRM
+summary(delivery.lm)
+summary(delivery.lm)$r.squared
+#regression with single predictor
+delivery.lm.tim.pro <- lm(delivery$delTime ~delivery$n.prod)
+summary(delivery.lm.tim.pro)$r.squared
+# 0.9304813 < 0.9595937......so as we add predictor Rsq increases
+
+#adj Rsq
+summary(delivery.lm)$adj.r.squared
+
+
+
+#Predicting Volume Based on Girth
+trees
+trees_lm <- lm(Volume~Girth, trees)
+summary(trees_lm)
+# Non-linear Regression Models, part 1 
+plot(trees$Girth,trees$Volume, 
+     main = "Linear Regression Model", xlab = "Girth of trees in (ft.)", 
+     ylab = "Volume of Trees(cubic ft.)")
+lines(trees$Girth, predict(trees_lm), col  = "red")
+
+# Non-linear Regression Model Using poly() Function, part 2 
+
+trees_quad_lm <- lm(Volume~poly(Girth, 2, raw = T), trees)
+summary(trees_quad_lm)
+
+
+# Nonlinear Regression Model Using I() Function
+trees_i_lm <- lm(Volume~I(Girth^2), trees)
+summary(trees_i_lm)
+
+
+# Visualizing the Obtained Non-Linear Regression Model
+plot(trees$Girth,trees$Volume, 
+     main = "Linear Regression Model", xlab = "Girth of trees in (ft.)", 
+     ylab = "Volume of Trees(cubic ft.)")
+lines(trees$Girth, predict(trees_i_lm), col  = "red")
+
+
+
+# Exercise 3 : Non-Linear Regression Models
+
+trees_log_lm <- lm(log(Volume)~ log(Height) + log(Girth^2), trees)
+summary(trees_log_lm)
+
+
+trees_h_lm <- lm(Volume~ Height + Girth^2, trees)
+summary(trees_h_lm)
+
+#Exponential Regression
+# Visualizing the Tire Usability Data
+Miles_driven <- c(1,2,5,10,20,30,40,50)
+Percentage_useable <- c(98.2,91.7,81.3,64,36.4,32.6,17.1,11.3)
+tires <- cbind.data.frame(Miles_driven, Percentage_useable)
+View(tires)
+#exponential relationship between miles driven and the percentage usability of the tire.
+plot(tires$Miles_driven,tires$Percentage_useable, main = "miles_driven vs precentage_useable")
+
+
+# Exponential Regression Model
+# y = a.e^(b*x)
+#Determining an Exponential Regression Model
+exp_model_tires <- lm(log(tires$Percentage_useable)~ tires$Miles_driven)
+plot(exp_model_tires)
+#log(Percentage_useable) =  4.604578 - 0.043236(Miles_driven)
+summary(exp_model_tires)
+
+# Visualizing the Obtained Exponential Regression Model
+plot(tires$Miles_driven,tires$Percentage_useable, main = "miles_driven vs precentage_useable")
+lines(tires$Miles_driven, exp(predict(exp_model_tires)), col = "red")
+
+
+
+
+#Generalized Linear Model
+library(MASS)
+Cars93
+cbind(names(Cars93))
+glm_cars93 <- subset.data.frame(Cars93[,c(26,14,13)])
+glm_cars <- subset.data.frame(Cars93[,c(26,14)])
+#It can be observed from the scatter plot that the dependent variable (origin) is bound to the values 0 and 1
+plot(glm_cars93$RPM, glm_cars93$Origin)
+plot(glm_cars93$Horsepower, glm_cars93$Origin)
+
+
+#Determining the Logistic Regression Model
+logistic_model1 <- glm(Origin~RPM, family = binomial(link="logit"), data= glm_cars)
+summary(logistic_model1)
+
+logistic_model2 <- glm(Origin~Horsepower, family = binomial(link="logit"), data= glm_cars93)
+summary(logistic_model2)
+
+logistic_model3 <- glm(Origin~RPM+Horsepower, family = binomial(link="logit"), data= glm_cars93)
+summary(logistic_model3)
+#The residual deviance indicates the how well the dependent variable is predicted by the model on 
+#adding predictor variables. Lower the value of the residual deviance, better is the model
+
+
+#PLOTTING logistic_modelS
+plot(glm_cars, main="Logistic Regression Models")
+curve(predict(logistic_model1, data.frame(RPM = x), type="response"), add=T)
+
+
+
+
+#project 1
+online_news <- read.csv(choose.files())
+summary(online_news)
+View(online_news)
+dim(online_news)
+
+hist(online_news$shares)  # not normal 
+
+log_shares <- log(online_news$shares) # log of shares
+hist(log_shares) # some degree of normality 
+
+online_news <- cbind.data.frame(online_news, log_shares) # adding column in data frame
+
+qqnorm(online_news$log_shares)
+shapiro.test(log(online_news$shares))
+
+# finding outliers
+cbind(names(online_news))
+
+online_news_outlier <- (online_news$log_shares >
+                          quantile(online_news$log_shares,0.25) - 1.5*IQR(online_news$log_shares) 
+                        & 
+                          online_news$log_shares < 
+                          quantile(online_news$log_shares, 0.75) + 1.5*IQR(online_news$log_shares)) 
+# logical, true is not an outlier
+
+online_news_outlier <- cbind(online_news_outlier) # column vector
+
+table(online_news_outlier) # frequency
+
+nrow(online_news_outlier)
+y <- cbind.data.frame(online_news, online_news_outlier) # adding outlier logical column
+
+View(y)
+
+y1 <- y[y$online_news_outlier!=FALSE, ]
+View(y1)  # without outlier
+table(y1$online_news_outlier)
+#regress now
+
+
+
+library(xlsx)
+#project2
+ccpp.data <- read.xlsx("Z:/regression analysis/CCPP/Folds5x2_pp.xlsx", 1)
+plot(ccpp.data)
+#Identifying the Training and Testing Data
+?set.seed
+set.seed(1246)
+#size of training data
+training.data.size <-   floor(0.75*nrow(ccpp.data))
+training.data.size
+#index numbers
+power.train.index <- sample(1:nrow(ccpp.data), training.data.size)
+#training data
+power.train <- ccpp.data[power.train.index, c("AT", "PE")]
+head(power.train)
+#TESTING DATA
+power.test <- ccpp.data[-power.train.index, c("AT", "PE")]
+head(power.test)
+
+#Determining the Regression Model Using Training Data
+#regression model
+power.model <- lm(PE~AT, power.train)
+summary(power.model)
+#Visualizing the Regression Model
+plot(power.train,main="regression model", xlab="ambient temp in degree celcius",
+     ylab= "power granted in mw")
+lines(power.train$AT, predict(power.model), col = 'blue', lwd=3)
+#Prediction Accuracy of the Regression Model
+head(power.test, 1)
+#calculation of error in prediction
+predicted.val <- predict(power.model, newdata=head(power.test, 1))
+predicted.val
+error <- head(power.test, 1)$PE- predicted.val
+error
+
+percent.error <- (error/head(power.test, 1)$PE)*100
+percent.error
+
+
+#mean absolute percentage error
+predicted.values <- predict(power.model, newdata=power.test)
+percentage.error <- ((predicted.values - power.test$PE)*100/power.test$PE)
+head(percentage.error)
+mean(percentage.error)
+mean(abs(percentage.error))
+#The mean absolute percentage error of 0.9439238 suggests that the regression model given as 
+#PE= 497.053303 - 2.174736 * (AT)
+#is approximately 99.05608% (100- 0.9439238)accurate in predicting the electrical power 
+#generated (PE) based on the ambient temperature (AT).
