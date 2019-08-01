@@ -1,0 +1,52 @@
+setwd("Z:/project")
+library(xlsx)
+GE <- read.xlsx("total data.xlsx", sheetName = "GE")
+BAC <- read.xlsx("total data.xlsx", sheetName = "BAC")
+XOM <- read.xlsx("total data.xlsx", sheetName = "XOM")
+SP500 <- read.xlsx("total data.xlsx", sheetName = "SP500")
+
+library(ggplot2)
+library(ggfortify)
+library(zoo)
+class(XOM)
+library(timeSeries)
+
+#taking closing date and converting it into time series data
+ge.close <- zoo(GE$close[1:4379], order.by = GE$date, unique(T))
+class(ge.close)
+ge.close <- ts(ge.close, frequency = 365)
+
+bac.close <- zoo(BAC$close[1:4379], order.by = BAC$date, unique(T))
+class(bac.close)
+bac.close <- ts(bac.close, frequency = 365)
+
+xom.close <- zoo(XOM$Close[1:4379], order.by = XOM$Date, unique(T))
+class(xom.close)
+xom.close <- ts(xom.close, frequency = 365)
+
+sp500.close <- zoo(SP500$Close[1:4379], order.by = SP500$Date, unique(T))
+class(sp500.close)
+sp500.close <- ts(sp500.close, frequency = 365)
+
+sp500.close<- decompose(sp500.close)
+ge.close<- decompose(ge.close)
+xom.close<- decompose(xom.close)
+bac.close<- decompose(bac.close)
+?xlim
+
+
+autoplot(ge.close$trend, ts.colour = ('dodgerblue3'), main="Trend of GE stock closing price",
+         xlab = "1st Jan 2000 to 31st May 2017", ylab = "Closing Price")
+autoplot(bac.close$trend, ts.colour = ('dodgerblue3'), main="Trend of BAC stock closing price",
+         xlab = "1st Jan 2000 to 31st May 2017", ylab = "Closing Price")
+autoplot(xom.close$trend, ts.colour = ('dodgerblue3'), main="Trend of XOM stock closing price",
+         xlab = "1st Jan 2000 to 31st May 2017", ylab = "Closing Price")
+autoplot(sp500.close$trend, ts.colour = ('dodgerblue3'), main="Trend of SP500 stock closing price",
+         xlab = "1st Jan 2000 to 31st May 2017", ylab = "Closing Price")
+
+
+ts.plot(ge.close$trend, bac.close$trend, xom.close$trend)
+
+
+
+cor(GE$close[1:4379], SP500$Close[1:4379])
