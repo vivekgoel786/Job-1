@@ -1,0 +1,47 @@
+SQL
+
+--ANSWER 1
+select * from item;
+select itemtype from item where category='C';
+select distinct itemtype from item where category='C';
+
+--ANSWER 2
+select * from retailstock;
+select roid, sum(unitprice*qtyavailable) TOTAL_VALUE from retailstock group by roid;
+
+--ANSWER 3
+select min(price) from item;
+select itemcode, descr, price from item where price=(select min(price) from item);
+
+--ANSWER 4
+select * from retailstock;
+
+select min(sum(qtyavailable)) from item i inner join retailstock r on i.itemcode=r.itemcode 
+group by r.itemcode;
+
+select r.itemcode, i.descr, sum(qtyavailable) "TotalQtyAvailable" 
+from item i inner join retailstock r on i.itemcode=r.itemcode 
+group by r.itemcode,descr having sum(qtyavailable) =(select min(sum(qtyavailable))  
+from item i inner join retailstock r on i.itemcode=r.itemcode
+group by r.itemcode,descr);
+
+
+
+
+
+Advanced SQL 
+
+--ANSWER 1
+select * from emp
+select ename, job, sal from emp e1 where 2 > (select count(empno) from emp e2  where e2.sal >e1.sal ) order by sal desc;
+
+--ANSWER 3
+select * from emp;
+
+select count(DISTINCT(sal)) "distinctValues", max(sal)  "max", min(sal)  "min" from emp;
+
+select count(DISTINCT(sal)) "distinctValues", max(sal)  "max", min(sal)  "min", 
+SUM( CASE WHEN sal IS NULL THEN 1 
+          ELSE 0 
+          END) "nullCount"
+from emp;
