@@ -1,0 +1,106 @@
+setwd("Z:\\statistical inference\\SI Data")
+students <- read.csv(choose.files())
+students
+
+#generating 25 states s1,s2,s3...s25
+states <- paste("s", 1:25, sep="")
+states
+
+#sampling 8 states from the 25 states
+sample(states, 8, replace = F)
+
+emp <- read.xlsx(choose.files(), sheetIndex = 1, header = T)
+emp
+#finding number of strata
+table(emp$dept, emp$job_level)
+library(sampling)
+s <- strata(emp, c("dept", "job_level"), size=c(1,1,1,1), "srswor")
+s
+st_sample <- getdata(emp,s)[1:3]
+st_sample
+
+#plotting the distribution
+head(students)
+head(students,10)
+?hist
+hist(students$Mark, breaks = seq(160, 600, 20), xlim = c(160, 600), 
+     main="distribution of marks", xlab="Marks")
+sample_mean <- mean(students$Mark)
+sample_var <- var(students$Mark)
+sample_sd <- sd(students$Mark)
+print(c(sample_mean, sample_var, sample_sd))
+
+
+#SAMPLING DISTRIBUTION OF SAMPLE MEAN
+library(xlsx)
+dice_data <- read.xlsx(choose.files(), sheetIndex = 1)
+dice_data
+class(dice_data)
+n <- nrow(dice_data)
+n
+table(dice_data$Output)
+barplot(table(dice_data$Output), ylim = c(0,200))
+dice_pop_mean <- mean(dice_data$Output)
+dice_pop_var <- sum((dice_data$Output-dice_pop_mean)^2)/(n)
+dice_pop_sd <- sqrt(dice_pop_var)
+print(c(dice_pop_mean, dice_pop_var, dice_pop_sd))
+
+#generating samples from the population
+gensample_dice <- function(n){sample(dice_data$Output,n,replace = T)}
+#creatind 1000 samples for each size 3
+sample.dice_3 <- mapply(gensample_dice, rep(3,1000), SIMPLIFY = T)
+dim(sample.dice_3)
+sample.dice_3
+#creatind 1000 samples for each size 4
+sample.dice_4 <- mapply(gensample_dice, rep(4,1000), SIMPLIFY = T)
+dim(sample.dice_4)
+sample.dice_4
+
+#Calculating sample means of each sample
+sample.mean_3 <- apply(sample.dice_3, 2, mean)
+sample.mean_4 <- apply(sample.dice_4, 2, mean)
+
+str(sample.mean_3)
+str(sample.mean_4)
+
+#Plotting sampling distribution of sample mean for n = 3
+hist(sample.mean_3, breaks = seq(0,6,0.25), xlim = c(0,7), 
+     xlab="range", main = "sampling distribution of sample mean for n = 3")
+mean.sample.mean_3 <- mean(sample.mean_3)
+print(c(mean.sample.mean_3, dice_pop_mean))
+sd.sample.mean_3 <- sd(sample.mean_3)
+print(c(sd.sample.mean_3, dice_pop_sd))
+
+
+#Plotting sampling distribution of sample mean for n = 4
+hist(sample.mean_4, breaks = seq(0,6,0.25), xlim = c(0,7), 
+     xlab="range", main = "sampling distribution of sample mean for n = 4")
+mean.sample.mean_4 <- mean(sample.mean_4)
+print(c(mean.sample.mean_4, dice_pop_mean))
+sd.sample.mean_4 <- sd(sample.mean_4)
+print(c(sd.sample.mean_4, dice_pop_sd))
+
+
+#standard error
+#standard error for sampling dist of sample mean for n=3 using the formula
+SE_3 <- dice_pop_sd/sqrt(3)
+sd.sample.mean_3             #observed
+#standard error for sampling dist of sample mean for n=4 using the formula
+SE_4 <- dice_pop_sd/sqrt(4)
+sd.sample.mean_4             #observed
+print(c(SE_3, SE_4))
+#as n increases the standard error falls
+
+
+#Application of sampling distribution of sample mean
+mu <- 72
+x <- 80
+sigma <- 12.5
+n=10
+stderror <- sigma/sqrt(n)
+stderror
+zscore <- (x-mu)/stderror
+#area under the curve from left to right
+pnorm(2.023858) #prob the marks is below 80
+1- pnorm(2.023858) #prob the marks is above 80
+
