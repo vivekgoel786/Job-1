@@ -1,0 +1,141 @@
+#CDF - Binomial distribution
+q <- seq(from = 0, to = 5, by = 1)
+y <- pbinom(q, size = 5, prob = 0.2)
+y
+barplot(y, names.arg = q,
+         xlab = "No. of successes in 5 trials, x",
+         ylab = "Probability, P(X = x)",
+         main = "The Binomial Distribution - CDF",
+         ylim = c(0,1.2), col ="#377eb8")
+
+barplot(x, names.arg = x,
+        xlab = "No. of success in 5 trails, x",
+        ylab = "Probability, P(X=x)", 
+        main = "The binomial distribution - CDF",
+        ylim = c(0,1.2), col = "#377eb8") 
+
+
+
+
+#normal distribution 
+
+#with sample size 10
+xbar = numeric(1000)
+for (i in 1:1000){x=rbinom(10,10,0.6)
+xbar[i]=mean(x)};
+
+hist(xbar, col="lavenderblush", main = "n=10", breaks=50)
+mean(xbar)
+
+
+#with sample size 100
+xbar2 = numeric(1000)
+for (i in 1:1000){x=rbinom(100,10,0.6)
+xbar2[i]=mean(x)};
+
+hist(xbar2, col="khaki", main = "n=100", breaks=50)
+mean(xbar2)
+
+#with sample size 10000
+xbar3 = numeric(10000)
+for (i in 1:10000){x=rbinom(10000,10,0.6)
+                    xbar3[i]=mean(x)};
+
+hist(xbar3, col="darkolivegreen1", main = "n=10000", breaks=50)
+mean(xbar3)
+
+
+
+#lognormal distribution
+#mu=10, sigma=1.5
+#to get F(X)>10000
+1-plnorm(q=10000, meanlog=10, sdlog = 1.5 )
+#use of lower tail option
+plnorm(q=10000, meanlog=10, sdlog = 1.5, lower.tail = FALSE)
+
+#lamda=1/6
+1-pexp(7,1/6)
+
+
+
+
+#gamma distribution
+#for P(X<=50)
+pgamma(q=50, shape=2, rate=1/100)
+
+
+
+#weibull distribution is kind of exponential distribution
+#here alfa and beta is 1
+curve(dweibull(x, shape = 1, scale = 1),0,5)
+#here lamda is 1
+curve(dexp(x, rate = 1),0,5)
+
+
+#t distribution
+#n=15, S=14, sample mean =98
+pt(84, df=14, ncp=98)
+
+pt(128, df=14, ncp=98) - pt(84, df=14, ncp=98)
+pt(128, df=14, ncp=98, lower.tail = FALSE)
+
+
+#chisquare
+pchisq(q=13.5, df=6, lower.tail = FALSE)
+
+
+#f distribution
+qf(p=0.95, df1=4, df2=5)
+
+
+#lets first simulate a bivariate normal sample
+library(MASS)
+bivn2 <- mvrnorm(1000, mu= c(0,0), Sigma = matrix(c(1.5,1.5,1.5,1.5), 2))
+#now we do a kernaldensity estimate
+bivn.kde2 <- kde2d(bivn2[,1], bivn[,2], n=50)
+#fancy perspective
+persp(bivn.kde2, phi=20, theta=30, shade=0.1, border=NA, col = "lightblue",
+      xlab="X", main= "3D Density Plot")
+
+
+
+#X and Y are continues random variables
+x <- seq(-5, 5, len=50)
+y <- seq(0.001, 10, len=50)
+z <- outer(x, y, function(x, y){
+  dnorm(x) * dgamma(y, 5)
+})
+#plot using contour
+contour(x, y, z)
+
+hist(mtcars$mpg)
+hist(mtcars$mpg, breaks = 10)
+hist(mtcars$mpg, breaks = 50)
+hist(mtcars$mpg, breaks = seq(0, 40, 2.5))
+
+
+str(qqnorm)
+str(qqline)
+y <- rt(50, df=5)
+qqnorm(y, pch=16)
+qqline(y, col=2, lwd=2.5)
+
+
+str(qqplot)
+y <- qunif(ppoints(length(randu$x)))
+qqplot(randu$x, y)
+
+str(chisq.test)
+
+
+shapiro.test(rnorm(100, mean = 6, sd=4))
+
+str(ks.test)
+#take 3 samples x,y,z
+x <- rnorm(1000, mean=0, sd = 1) 
+y <- rt(n=1000, df=3)
+z <- rgamma(n=1000, shape=1, rate = 3)
+#check if x and y are from same distribution
+ks.test(x,y)
+#check if z and y are from same distribution
+ks.test(y,z)
