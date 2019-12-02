@@ -1,0 +1,58 @@
+install.packages("rpart")
+install.packages("caTools")
+install.packages("rpart.plot")
+install.packages("caret")
+install.packages("e1071")
+install.packages("randomForest")
+getwd()
+data <- read.csv("diabetes.csv")
+View(data)
+
+#******************************************************************
+#dividing the data into training and test dataset
+set.seed(3)
+id <- sample(2, nrow(data), prob = c(0.7,0.3), replace = TRUE)
+train <- data[id==1,]
+test <- data[id==2,]
+
+#******************************************************************
+#building decision tree
+library(rpart)
+library(rpart.plot)
+colnames(data)
+
+model <- rpart(class~., data = train)
+model
+summary(model)
+
+#plot the model
+plot(model, uniform=TRUE,margin=0.2)
+text(model, use.n=TRUE,pretty = TRUE, all=TRUE, cex=.8)
+
+rpart.plot(model, cex = 0.6)
+
+#prediction of test dataset
+pred <- predict(model, newdata = test, type = "class")
+pred
+
+#confusion matrix
+library(caret)
+confusionMatrix(table(pred, test$class))
+
+
+#Building random forest
+library(randomForest)
+data$class <- as.factor(data$class)
+train$class <- as.factor(train$class)
+
+bestmtry <- tuneRF(train, train$class, stepFactor = 1.2, improve = 0.01,
+                 trace = T, plot=T)
+model2 <- randomForest(class~., data = train)
+model2
+importance(model2)
+varImpPlot(model2)
+
+
+pred2 <- predict(model2, newdata = test, type = "class")
+pred2
+confusionMatrix(table(pred2, test$class))
