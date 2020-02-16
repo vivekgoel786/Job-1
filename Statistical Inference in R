@@ -104,3 +104,51 @@ zscore <- (x-mu)/stderror
 pnorm(2.023858) #prob the marks is below 80
 1- pnorm(2.023858) #prob the marks is above 80
 
+
+
+
+
+#The probability density function: dnorm
+#example
+sample.range <- 50:150
+iq.mean <- 100
+iq.sd <- 15
+iq.dist <- dnorm(sample.range, mean = iq.mean, sd = iq.sd)
+iq.df <- data.frame("IQ" = sample.range, "Density" = iq.dist)
+library(ggplot2)
+ggplot(iq.df, aes(x = IQ, y = Density)) + geom_point()
+
+pp <- function(x) {
+  print(paste0(round(x * 100, 3), "%"))
+}
+# likelihood of IQ == 140?
+pp(iq.df$Density[iq.df$IQ==140])
+
+# likelihood of IQ >= 140?
+pp(sum(iq.df$Density[iq.df$IQ >= 140]))
+
+pp(sum(iq.df$Density[iq.df$IQ < 90]))
+
+# likelihood of 50 < IQ <= 90?
+pp(sum(iq.df$Density[iq.df$IQ >50]) - sum(iq.df$Density[iq.df$IQ <= 90]))
+
+
+#The cumulative density function: pnorm
+cdf <- pnorm(sample.range, iq.mean, iq.sd)
+iq.df <- cbind(iq.df, "CDF_LowerTail" = cdf)
+ggplot(iq.df, aes(x = IQ, y = CDF_LowerTail)) + geom_point()
+
+# likelihood of IQ <= 140?
+pp(iq.df$CDF_LowerTail[iq.df$IQ == 140])
+
+# likelihood of IQ <= 90?
+pp(iq.df$CDF_LowerTail[iq.df$IQ == 90])
+
+
+
+# set lower.tail to FALSE to obtain P[X >= x]
+cdf2 <- pnorm(sample.range, iq.mean, iq.sd, lower.tail = FALSE)
+iq.df <- cbind(iq.df, "CDF_UpperTail" = cdf2)
+# Probability for IQ >= 140? same value as before using dnorm!
+pp(iq.df$CDF_UpperTail[iq.df$IQ == 140])
+
