@@ -30,13 +30,12 @@ library(forecast)
 library(tseries)
 library(stats)
 
-#plot trthe time series data
+#plot the time series data
+AirPassengers #already a time series data
 plot(AirPassengers, xlab="Years", ylab="No. of Passengers", main="Airpassengers data")
 hist(AirPassengers)
 
 View(AirPassengers)
-AirPassengers
-
 
 #seasonal plot year-wise
 ggseasonplot(AirPassengers, year.labels = TRUE, year.labels.left = TRUE) +ylab("degree") +
@@ -85,7 +84,7 @@ plot(Air_Decom_Log)
 #splitting the training and test
 Train <- window(AirPassengers, start=c(1949, 1), end=c(1958, 12), frequency=12)
 Test <- window(AirPassengers, start=c(1959, 1), frequency=12)
-
+Train
 
 autoplot(Train, series = "Train")+autolayer(Test, series = "Test")+
   ggtitle("No. of passengers train and test data")+
@@ -96,6 +95,8 @@ autoplot(Train, series = "Train")+autolayer(Test, series = "Test")+
 #random walk with drift
 Train_Decom_Log <- stl(log10(Train), s.window = 'p')
 Train_Decom_Log_stlforcast <- forecast(Train_Decom_Log, method = "rwdrift", h = 24)
+Train_Decom_Log_stlforcast
+
 #plotting the model
 plot(Train_Decom_Log_stlforcast)
 Vec2 <- 10^(cbind(log10(Test), as.data.frame(Train_Decom_Log_stlforcast)[,1]))
@@ -103,7 +104,7 @@ ts.plot(Vec2, col=c("blue", "red"), main="No. of Passengers Actual vs Forecast")
 #actual is blue and forecast is red.....actual is a bit high #under-predicted
 
 #check accuracy of RWD
-RMSE2 <- round(sqrt(sum((Vec2[,1]- Vec2[,2])^2)/length(Vec2[,1])),4)
+RMSE2<- round(sqrt(sum((Vec2[,1]- Vec2[,2])^2)/length(Vec2[,1])),4)
 MAPE2 <- round(mean(abs(Vec2[,1]-Vec2[,2])/Vec2[,1]),4)
 
 paste("Accuracy Measures RMSE:", RMSE2, "and MAPE:", MAPE2)
@@ -131,7 +132,7 @@ Train_HW
 Train_HW$model
 #alpha = 0.3477, smoothing of the level,btw 0 & 1 i.e.avg of the current and the past level
 #beta  = 2e-04, close to 0, means trend is not changing much, series constantly increasing in straight line, slope not changing much
-#gamma = 0.6519, high seasonal fluctuation
+#gamma = 0.6519, high seasonal fluctuation  
 
 #plotting the forecast
 plot(Train_HW)
