@@ -77,7 +77,7 @@ library(astsa)
 plot(jj, type = 'o', xlab = 'Years', ylab = 'Earnings',
      main = 'J&J quaterly earnings per share') #seasonal and trend, variation increasing overtime
 
-plot(flu, xlab = 'MOnths', ylab = 'No. of deaths per 10000 people ',
+plot(flu, xlab = 'Months', ylab = 'No. of deaths per 10000 people ',
      main = 'Monthly Pneumonia and Influenza Deaths in US') #seasonality, cant say about trend
 
 plot(globtemp, type = 'o', xlab = 'Years', ylab = 'Temp Deviations', #trend and seasonality
@@ -90,7 +90,7 @@ plot(star, xlab = 'Days', ylab = 'Magnitude',
 #stationarity
 #in a weak stationary time series there is 
 # no systematic change in mean (no trend)
-# no systematic change in variation
+# no systematic change in variation overtime
 # no periodic fluctuation (no seasonality)
 
 purely_random_process <- ts(rnorm(100))
